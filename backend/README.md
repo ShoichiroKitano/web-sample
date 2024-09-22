@@ -85,3 +85,9 @@ $ curl -i localhost:8080/samples
 ```
 $ cargo fmt
 ```
+
+# debug出力
+```
+# infoを設定するとリクエスト等も出力できる。他にもdebugやerrorなども設定できる。
+RUST_LOG=info cargo run
+```

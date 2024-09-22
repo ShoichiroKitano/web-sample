@@ -8,7 +8,7 @@ struct State {
 #[derive(serde::Deserialize)]
 struct CreateSampleJson {
     name: String,
-    status: i32,
+    status: i64,
 }
 
 async fn create_sample(
@@ -71,6 +71,8 @@ async fn index_samples(data: actix_web::web::Data<State>) -> actix_web::HttpResp
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
+    env_logger::init();
+
     let pool = sqlx::mysql::MySqlPool::connect_with(
         "mysql://root:password@127.0.0.1:3306/sample_web"
             .parse()
@@ -79,7 +81,15 @@ async fn main() -> anyhow::Result<()> {
     .await
     .context("database connection failes")?; // anyhow::Contextをuseすると使えるようになるメソッド
     let _ = actix_web::HttpServer::new(move || {
+        let cors = actix_cors::Cors::default()
+            .allowed_origin("http://localhost:5173")
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_header(actix_web::http::header::CONTENT_TYPE)
+            .max_age(3600);
+
         actix_web::App::new()
+            .wrap(actix_web::middleware::Logger::default())
+            .wrap(cors)
             .app_data(actix_web::web::Data::new(State { pool: pool.clone() }))
             .service(
                 actix_web::web::resource("/samples")
